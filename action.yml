@@ -30,6 +30,9 @@ inputs:
   load:
     description: "Load the built image"
     required: false
+  push:
+    description: "Push the built image"
+    required: false
   build-args:
     description: "Build-time variables"
     required: false
@@ -105,4 +108,5 @@ runs:
         cache-from: ${{ env.CACHE_FROM }}
         cache-to: ${{ env.CACHE_TO }}
         load: ${{ inputs.load }}
+        push: ${{ inputs.push }}
         build-args: ${{ inputs.build-args }}
