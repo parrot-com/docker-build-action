@@ -40,7 +40,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Docker Buildx
-      if: ${{ inputs.setup-buildx == "true" }}
+      if: ${{ inputs.setup-buildx == 'true' }}
       uses: docker/setup-buildx-action@v3
       with:
         driver-opts: |
