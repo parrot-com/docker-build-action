@@ -30,9 +30,11 @@ inputs:
   load:
     description: "Load the built image"
     required: false
+    default: "false"
   push:
     description: "Push the built image"
     required: false
+    default: "false"
   build-args:
     description: "Build-time variables"
     required: false
