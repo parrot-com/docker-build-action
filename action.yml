@@ -16,11 +16,11 @@ inputs:
   cache-from:
     description: "The cache to use for the build"
     required: false
-    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ vars.RUNNER_CACHE_S3_BUCKET_REGION }},bucket=${{ vars.RUNNER_CACHE_S3_BUCKET }}"
+    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=$RUNNER_CACHE_S3_BUCKET_REGION,bucket=$RUNNER_CACHE_S3_BUCKET"
   cache-to:
     description: "The cache to save after the build"
     required: false
-    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ vars.RUNNER_CACHE_S3_BUCKET_REGION }},bucket=${{ vars.RUNNER_CACHE_S3_BUCKET }},mode=max"
+    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=$RUNNER_CACHE_S3_BUCKET_REGION,bucket=vars.RUNNER_CACHE_S3_BUCKET,mode=max"
   load:
     description: "Load the built image"
     required: false
