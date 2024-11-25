@@ -1,0 +1,60 @@
+name: "Docker Build with S3 cache"
+description: "Builds a Docker image with S3 cache"
+inputs:
+  context:
+    description: "The build context"
+    required: false
+  file:
+    description: "The Dockerfile to use"
+    required: false
+  target:
+    description: "The target stage to build"
+    required: false
+  tags:
+    description: "The tags to apply to the built image"
+    required: true
+  cache-from:
+    description: "The cache to use for the build"
+    required: false
+    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ vars.RUNNER_CACHE_S3_BUCKET_REGION }},bucket=${{ vars.RUNNER_CACHE_S3_BUCKET }}"
+  cache-to:
+    description: "The cache to save after the build"
+    required: false
+    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ vars.RUNNER_CACHE_S3_BUCKET_REGION }},bucket=${{ vars.RUNNER_CACHE_S3_BUCKET }},mode=max"
+  load:
+    description: "Load the built image"
+    required: false
+  build-args:
+    description: "Build-time variables"
+    required: false
+  setup-buildx:
+    description: "Whether to set up Docker Buildx"
+    required: false
+    default: "true"
+  buildkit-image:
+    description: "The BuildKit image to use"
+    required: false
+    default: "982534392736.dkr.ecr.us-east-1.amazonaws.com/github-cache/docker-hub/moby/buildkit:master"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Docker Buildx
+      if: ${{ inputs.setup-buildx == "true" }}
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: |
+          image=${{ inputs.buildkit-image }}
+          network=host
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.file }}
+        target: ${{ inputs.target }}
+        tags: ${{ inputs.tags }}
+        cache-from: ${{ inputs.cache-from }}
+        cache-to: ${{ inputs.cache-to }}
+        load: ${{ inputs.load }}
+        build-args: ${{ inputs.build-args }}
