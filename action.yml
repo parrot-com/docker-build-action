@@ -1,9 +1,10 @@
 name: "Docker Build with S3 cache"
 description: "Builds a Docker image with S3 cache"
+
 inputs:
   cache-bucket:
     description: "Bucket in which the cache is stored"
-    required: true
+    required: false
   cache-region:
     description: "Region in which the cache is stored"
     required: false
@@ -23,11 +24,9 @@ inputs:
   cache-from:
     description: "The cache to use for the build"
     required: false
-    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ inputs.cache-region }},bucket=${{ inputs.cache-bucket }}"
   cache-to:
     description: "The cache to save after the build"
     required: false
-    default: "type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=${{ inputs.cache-region }},bucket=${{ inputs.cache-bucket }},mode=max"
   load:
     description: "Load the built image"
     required: false
@@ -46,6 +45,36 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Dynamically set cache-from
+      shell: bash
+      env:
+        CACHE_BUCKET: ${{ inputs.cache-bucket }}
+        CACHE_REGION: ${{ inputs.cache-region }}
+        USER_CACHE_FROM: ${{ inputs.cache-from }}
+      run: |
+        if [ -n "$USER_CACHE_FROM" ]; then
+          echo "CACHE_FROM=$USER_CACHE_FROM" >> $GITHUB_ENV
+        elif [ -n "$CACHE_BUCKET" ] && [ -n "$CACHE_REGION" ]; then
+          echo "CACHE_FROM=type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=$CACHE_REGION,bucket=$CACHE_BUCKET" >> $GITHUB_ENV
+        else
+          echo "CACHE_FROM=" >> $GITHUB_ENV
+        fi
+
+    - name: Dynamically set cache-to
+      shell: bash
+      env:
+        CACHE_BUCKET: ${{ inputs.cache-bucket }}
+        CACHE_REGION: ${{ inputs.cache-region }}
+        USER_CACHE_TO: ${{ inputs.cache-to }}
+      run: |
+        if [ -n "$USER_CACHE_TO" ]; then
+          echo "CACHE_TO=$USER_CACHE_TO" >> $GITHUB_ENV
+        elif [ -n "$CACHE_BUCKET" ] && [ -n "$CACHE_REGION" ]; then
+          echo "CACHE_TO=type=s3,blobs_prefix=cache/${{ github.repository }}/,manifests_prefix=cache/${{ github.repository }}/,region=$CACHE_REGION,bucket=$CACHE_BUCKET,mode=max" >> $GITHUB_ENV
+        else
+          echo "CACHE_TO=" >> $GITHUB_ENV
+        fi
+
     - name: Set up Docker Buildx
       if: ${{ inputs.setup-buildx == 'true' }}
       uses: docker/setup-buildx-action@v3
@@ -61,7 +90,8 @@ runs:
         file: ${{ inputs.file }}
         target: ${{ inputs.target }}
         tags: ${{ inputs.tags }}
-        cache-from: ${{ inputs.cache-from }}
-        cache-to: ${{ inputs.cache-to }}
+        cache-from: ${{ env.CACHE_FROM }}
+        cache-to: ${{ env.CACHE_TO }}
         load: ${{ inputs.load }}
         build-args: ${{ inputs.build-args }}
+
