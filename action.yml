@@ -46,6 +46,10 @@ inputs:
     description: "The BuildKit image to use"
     required: false
     default: "982534392736.dkr.ecr.us-east-1.amazonaws.com/github-cache/docker-hub/moby/buildkit:master"
+  local_docker_cache_dir:
+    description: "The local directory to store the cache"
+    required: false
+    default: "/var/tmp/docker-cache"
 
 outputs:
   digest:
@@ -99,6 +103,11 @@ runs:
           image=${{ inputs.buildkit-image }}
           network=host
 
+    - name: Create local Docker cache directory
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.local_docker_cache_dir }}
+
     - name: Build Docker image
       id: build-step
       uses: docker/build-push-action@v6
@@ -107,8 +116,12 @@ runs:
         file: ${{ inputs.file }}
         target: ${{ inputs.target }}
         tags: ${{ inputs.tags }}
-        cache-from: ${{ env.CACHE_FROM }}
-        cache-to: ${{ env.CACHE_TO }}
+        cache-from: |
+          type=local,src=${{ inputs.local_docker_cache_dir }}
+          ${{ env.CACHE_FROM }}
+        cache-to: |
+          type=local,dest=${{ inputs.local_docker_cache_dir }},compression=zstd,mode=max
+          ${{ env.CACHE_TO }}
         load: ${{ inputs.load }}
         push: ${{ inputs.push }}
         build-args: ${{ inputs.build-args }}
