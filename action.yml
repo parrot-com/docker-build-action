@@ -41,6 +41,9 @@ inputs:
   build-args:
     description: "Build-time variables"
     required: false
+  secrets:
+    description: "Secrets to expose to the build, as newline-separated id=value pairs"
+    required: false
   setup-buildx:
     description: "Whether to set up Docker Buildx"
     required: false
@@ -120,3 +123,4 @@ runs:
         load: ${{ inputs.load }}
         push: ${{ inputs.push }}
         build-args: ${{ inputs.build-args }}
+        secrets: ${{ inputs.secrets }}
